@@ -150,6 +150,7 @@ func HttpParameterT[T any](r *http.Request, name string) (result T, ok bool) {
 	return convert.ConvertInto[T](value)
 }
 
+// HttpParameterArray the []map[string]interface{} when the json body was a array of objects.
 func HttpParameterArray(r *http.Request) ([]map[string]interface{}, error) {
 	temp, temp_err := HttpParameterGeneric(r, "data")
 
