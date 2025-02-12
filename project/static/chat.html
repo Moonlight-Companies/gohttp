@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Chat Room</title>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6;
+            --message-bg: #fff;
+            --user-message-bg: #e0e7ff;
+            --border-radius: 12px;
+            --spacing: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-color);
+            color: #1f2937;
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: var(--spacing);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: var(--spacing);
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 0.975rem;
+        }
+
+        #chat-container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            background: var(--message-bg);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        #chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: var(--spacing);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-join, .user-leave {
+            align-self: center;
+            background: #f3f4f6;
+            font-size: 0.875rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            max-width: none;
+        }
+
+        .user-join {
+            color: #059669;
+        }
+
+        .user-leave {
+            color: #dc2626;
+        }
+
+        .chat-message {
+            background: var(--user-message-bg);
+            align-self: flex-start;
+            position: relative;
+        }
+
+        #chat-input {
+            display: flex;
+            padding: var(--spacing);
+            background: var(--message-bg);
+            border-top: 1px solid #e5e7eb;
+            gap: 12px;
+        }
+
+        #message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        #message-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        #send-button {
+            padding: 12px 24px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        #send-button:hover {
+            background: var(--primary-hover);
+        }
+
+        @media (max-width: 640px) {
+            :root {
+                --spacing: 12px;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            #send-button {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>SSE Chat Test Room</h1>
+    </header>
+
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <div id="chat-input">
+            <input type="text" id="message-input" placeholder="Type your message here...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import createSSE from './sse.js'
+
+        const client = createSSE('./events')
+        const chatMessages = document.getElementById('chat-messages')
+        const messageInput = document.getElementById('message-input')
+        const sendButton = document.getElementById('send-button')
+
+        function appendMessage(text, className = '') {
+            const messageElement = document.createElement('div')
+            messageElement.classList.add('message')
+            if (className) messageElement.classList.add(className)
+            messageElement.textContent = text
+            chatMessages.appendChild(messageElement)
+            chatMessages.scrollTop = chatMessages.scrollHeight
+        }
+
+        client.onMessage((msg) => {
+            switch (msg.event) {
+                case 'on_connect':
+                    appendMessage('Connected to the chat server.', 'user-join')
+                    break
+                case 'ping':
+                    // server sends when we are idle and connected
+                    break
+                case 'user_join':
+                    appendMessage(`${msg.user} has joined the chat.`, 'user-join')
+                    break
+                case 'user_leave':
+                    appendMessage(`${msg.user} has left the chat.`, 'user-leave')
+                    break
+                case 'chat_message':
+                    appendMessage(`${msg.user}: ${msg.message}`, 'chat-message')
+                    break
+                default:
+                    appendMessage(`Unknown event: ${msg.event}`)
+            }
+        })
+
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value.trim()
+            if (message) {
+                client.publish({
+                    event: 'chat_message',
+                    message: message
+                })
+                messageInput.value = ''
+            }
+        })
+
+        messageInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendButton.click()
+            }
+        })
+    </script>
+</body>
+
+</html>

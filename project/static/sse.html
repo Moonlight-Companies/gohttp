@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSE Event Viewer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h1 class="text-2xl font-bold mb-4">SSE Event Viewer</h1>
+      <div class="mb-4">
+        <span id="status" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100">
+          Disconnected
+        </span>
+        <span id="client-id" class="ml-4 text-gray-600"></span>
+      </div>
+      <div class="space-y-4">
+        <div class="flex space-x-4">
+          <button id="connect" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+            Connect
+          </button>
+          <button id="disconnect" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded" disabled>
+            Disconnect
+          </button>
+          <button id="clear" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+            Clear Events
+          </button>
+          <button id="Callback" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+            Send Callback
+          </button>
+        </div>
+        <div class="border rounded-lg overflow-hidden">
+          <div class="bg-gray-50 px-4 py-2 border-b">
+            <h2 class="font-semibold">Events</h2>
+          </div>
+          <div id="events" class="divide-y overflow-y-auto" style="max-height: 500px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module">
+    import createSSE from './sse.js'
+
+    let client = null
+    const statusEl = document.getElementById('status')
+    const clientIdEl = document.getElementById('client-id')
+    const eventsEl = document.getElementById('events')
+    const connectBtn = document.getElementById('connect')
+    const disconnectBtn = document.getElementById('disconnect')
+    const clearBtn = document.getElementById('clear')
+    const callbackBtn = document.getElementById('Callback')
+
+    function updateStatus(connected) {
+      statusEl.textContent = connected ? 'Connected' : 'Disconnected'
+      statusEl.className = `inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${connected ? 'bg-green-100 text-green-800' : 'bg-gray-100'}`
+      connectBtn.disabled = connected
+      disconnectBtn.disabled = !connected
+    }
+
+    function addEvent(data) {
+      const eventEl = document.createElement('div')
+      eventEl.className = 'p-4 hover:bg-gray-50'
+      const timestamp = new Date().toLocaleTimeString()
+      const eventName = data.event || 'message'
+      let eventContent
+      try {
+        eventContent = JSON.stringify(data, null, 2)
+      } catch (err) {
+        eventContent = data
+      }
+      eventEl.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-medium">${eventName}</span>
+            <span class="text-sm text-gray-500">${timestamp}</span>
+          </div>
+          <pre class="text-sm text-gray-600 whitespace-pre-wrap">${eventContent}</pre>
+        `
+      eventsEl.insertBefore(eventEl, eventsEl.firstChild)
+    }
+
+    function connect() {
+      if (client) client.disconnect()
+      client = createSSE('./events')
+      client.onMessage((msg) => {
+        if (msg.event === 'on_connect' && msg.client_id) {
+          clientIdEl.textContent = `Client ID: ${msg.client_id}`
+        }
+        addEvent(msg)
+      })
+      updateStatus(true)
+    }
+
+    function disconnect() {
+      if (client) {
+        client.disconnect()
+        client = null
+      }
+      updateStatus(false)
+      clientIdEl.textContent = ''
+    }
+
+    connectBtn.addEventListener('click', connect)
+    disconnectBtn.addEventListener('click', disconnect)
+    clearBtn.addEventListener('click', () => {
+      eventsEl.innerHTML = ''
+    })
+    callbackBtn.addEventListener('click', () => {
+      if (client) {
+        const clientId = clientIdEl.textContent.replace('Client ID: ', '')
+        client.publish({
+          client_id: clientId,
+          event: 'all',
+          key: 'value',
+          anotherKey: Math.random()
+        })
+      }
+    })
+
+    // Auto-connect on page load
+    connect()
+    window.addEventListener('beforeunload', disconnect)
+  </script>
+</body>
+
+</html>
