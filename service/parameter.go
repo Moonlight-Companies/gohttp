@@ -48,17 +48,24 @@ func (s *Service) parameters(r *http.Request, params_uri map[string]string) (con
 		r.Body = io.NopCloser(bytes.NewReader(body))
 		ctx = context.WithValue(ctx, parameter_request_body, body)
 
-		// Unmarshal JSON into map[string]interface{}
-		var j map[string]interface{}
-		if err := json.Unmarshal(body, &j); err == nil {
-			// Convert each value to string (using fmt.Sprintf)
-			for k, v := range j {
-				params[k] = v
-			}
-		} else {
+		var jsonData interface{}
+		if err := json.Unmarshal(body, &jsonData); err != nil {
 			log.Println("Service::parameters: failed to unmarshal json", err)
+		} else {
+			switch data := jsonData.(type) {
+			case map[string]interface{}:
+				for k, v := range data {
+					params[k] = v
+				}
+			case []interface{}:
+				params["data"] = data
+			default:
+				log.Println("Service::parameters: unexpected JSON type", data)
+			}
 		}
-	} else if strings.HasPrefix(contentType, "application/x-www-form-urlencoded") ||
+	}
+
+	if strings.HasPrefix(contentType, "application/x-www-form-urlencoded") ||
 		strings.HasPrefix(contentType, "multipart/form-data") {
 		// Parse form parameters
 		if err := r.ParseForm(); err != nil {

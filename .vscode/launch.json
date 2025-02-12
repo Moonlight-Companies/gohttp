@@ -5,8 +5,8 @@
             "name": "Launch Project",
             "type": "go",
             "request": "launch",
-            "program": "${workspaceFolder}/project/cmd/main.go",
-            "cwd": "${workspaceFolder}/project",
+            "program": "${workspaceFolder}/cmd/main.go",
+            "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
             "args": [ "--servicename", "http-service-test"],
             "trace": "verbose"
