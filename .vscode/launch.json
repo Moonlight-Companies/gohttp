@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Project",
+            "type": "go",
+            "request": "launch",
+            "program": "${workspaceFolder}/project/cmd/main.go",
+            "cwd": "${workspaceFolder}/project",
+            "envFile": "${workspaceFolder}/.env",
+            "args": [ "--servicename", "http-service-test"],
+            "trace": "verbose"
+        }
+    ]
+}

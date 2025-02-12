@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"gohttp/service"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/Moonlight-Companies/gohttp/service"
 )
 
 // SseChatRoomClient implements SseEventHandler

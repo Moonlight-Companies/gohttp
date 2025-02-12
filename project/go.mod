@@ -1,4 +1,4 @@
-module gohttp
+module github.com/Moonlight-Companies/gohttp
 
 go 1.23.0
 
