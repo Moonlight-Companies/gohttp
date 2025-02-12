@@ -150,6 +150,30 @@ func HttpParameterT[T any](r *http.Request, name string) (result T, ok bool) {
 	return convert.ConvertInto[T](value)
 }
 
+func HttpParameterArray(r *http.Request) ([]map[string]interface{}, error) {
+	temp, temp_err := HttpParameterGeneric(r, "data")
+
+	if temp_err != nil {
+		return nil, temp_err
+	}
+
+	if temp == nil {
+		return nil, errors.New("no data found in request")
+	}
+
+	if data, ok := temp.([]interface{}); ok {
+		var result []map[string]interface{}
+		for _, v := range data {
+			if m, ok := v.(map[string]interface{}); ok {
+				result = append(result, m)
+			}
+		}
+		return result, nil
+	}
+
+	return nil, errors.New("unexpected data type")
+}
+
 // HttpParameterUUID retrieves a parameter by name, expects it as a string,
 // and returns a parsed UUID.
 func HttpParameterUUID(r *http.Request, name string) (uuid.UUID, error) {
