@@ -155,6 +155,8 @@ func (s *Service) RegisterRouteALL(uri string, fn ServiceHandleFunc) *serviceHtt
 }
 
 func (s *Service) RegisterRoute(uri, method string, fn ServiceHandleFunc) *serviceHttpRouteInfo {
+	uri = replaceAllDoubleSlashes(uri)
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

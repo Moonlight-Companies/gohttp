@@ -174,55 +174,65 @@ func (svc *Service) RegisterSSE(uri string, factory SseEventHandlerFactory) *Sse
 		uri + "/callback",
 	}
 
+	handleCallback := func(w http.ResponseWriter, r *http.Request) {
+		var clientID ClientID = ""
+
+		// Get the client ID from the request from X-Client-ID
+		if clientIDHeader := r.Header.Get("X-Client-ID"); clientIDHeader != "" {
+			clientID = ClientID(clientIDHeader)
+		}
+
+		// Get the client ID from the request from client_id (query string or body)
+		if clientID == "" {
+			clientIDParameters, ok := HttpParameterT[string](r, "client_id")
+			if ok && clientIDParameters != "" {
+				clientID = ClientID(clientIDParameters)
+			}
+		}
+
+		// Get the client ID from the request from observer_id (query string or body)
+		if clientID == "" {
+			clientIDParameters, ok := HttpParameterT[string](r, "observer_id")
+			if ok && clientIDParameters != "" {
+				clientID = ClientID(clientIDParameters)
+			}
+		}
+
+		if clientID == "" {
+			WriteError(w, errors.New("missing client_id"))
+			return
+		}
+
+		srv.mu.RLock()
+		session, exists := srv.clients[clientID]
+		srv.mu.RUnlock()
+		if !exists {
+			WriteError(w, errors.New("client not found"))
+			return
+		}
+
+		if session.user_handler != nil {
+			session.user_handler.OnCallback(w, r)
+		}
+	}
+
 	// Register callback endpoints.
 	for _, callbackURL := range callbacks {
 		// capture the current URL
 		url := callbackURL
-		svc.RegisterRoutePOST(url, func(w http.ResponseWriter, r *http.Request) {
-			var clientID ClientID = ""
-
-			// Get the client ID from the request from X-Client-ID
-			if clientIDHeader := r.Header.Get("X-Client-ID"); clientIDHeader != "" {
-				clientID = ClientID(clientIDHeader)
-			}
-
-			// Get the client ID from the request from client_id (query string or body)
-			if clientID == "" {
-				clientIDParameters, ok := HttpParameterT[string](r, "client_id")
-				if ok && clientIDParameters != "" {
-					clientID = ClientID(clientIDParameters)
-				}
-			}
-
-			// Get the client ID from the request from observer_id (query string or body)
-			if clientID == "" {
-				clientIDParameters, ok := HttpParameterT[string](r, "observer_id")
-				if ok && clientIDParameters != "" {
-					clientID = ClientID(clientIDParameters)
-				}
-			}
-
-			if clientID == "" {
-				WriteError(w, errors.New("missing client_id"))
-				return
-			}
-
-			srv.mu.RLock()
-			session, exists := srv.clients[clientID]
-			srv.mu.RUnlock()
-			if !exists {
-				WriteError(w, errors.New("client not found"))
-				return
-			}
-
-			if session.user_handler != nil {
-				session.user_handler.OnCallback(w, r)
-			}
-		})
+		svc.RegisterRoutePOST(url, handleCallback)
 	}
 
 	// Register the main SSE route.
+	// This route is used for both SSE and callback messages.
 	svc.RegisterRoute(uri, "*", func(w http.ResponseWriter, r *http.Request) {
+		acceptHeader := r.Header.Get("Accept")
+		clientID := r.Header.Get("X-Client-ID")
+		if !containsAcceptType(acceptHeader, "text/event-stream") && clientID != "" {
+			handleCallback(w, r)
+			return
+		}
+
 		// Set SSE headers.
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")

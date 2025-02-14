@@ -13,7 +13,7 @@ class SSEClient {
       throw new Error('Endpoint must be provided')
     }
     this.endpoint = endpoint
-    this.callbackEndpoint = endpoint + '/callback'
+    this.callbackEndpoint = endpoint
     this.eventSource = null
     this.connected = false
     this.client_id = null

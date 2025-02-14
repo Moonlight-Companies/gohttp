@@ -80,11 +80,19 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .user-join, .user-leave {
+        .user-join,
+        .user-leave {
             align-self: center;
             background: #f3f4f6;
             font-size: 0.875rem;
@@ -208,7 +216,8 @@
                     appendMessage(`${msg.user}: ${msg.message}`, 'chat-message')
                     break
                 default:
-                    appendMessage(`Unknown event: ${msg.event}`)
+                    //appendMessage(`Unknown event: ${msg.event}`)
+                    break
             }
         })
 
