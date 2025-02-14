@@ -14,9 +14,6 @@ import (
 
 func getEnv(key string) string {
 	value := os.Getenv(key)
-	if value == "" {
-		log.Fatalf("Missing environment variable %s", key)
-	}
 	return value
 }
 
@@ -27,7 +24,9 @@ func Invoke[T any](Call string, Parameters map[string]interface{}) (results T, b
 }
 
 func InvokeTimeout[T any](Call string, Parameters map[string]interface{}, timeout time.Duration) (results T, body []byte, err error) {
-	Parameters["Token"] = Token
+	if Token != "" {
+		Parameters["Token"] = Token
+	}
 
 	j, err := json.Marshal(Parameters)
 	if err != nil {
