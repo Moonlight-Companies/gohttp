@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/Moonlight-Companies/goconvert/convert"
+	"github.com/Moonlight-Companies/goconvert/validate"
 
 	"github.com/google/uuid"
 )
@@ -48,19 +49,25 @@ func (s *Service) parameters(r *http.Request, params_uri map[string]string) (con
 		r.Body = io.NopCloser(bytes.NewReader(body))
 		ctx = context.WithValue(ctx, parameter_request_body, body)
 
-		var jsonData interface{}
-		if err := json.Unmarshal(body, &jsonData); err != nil {
-			log.Println("Service::parameters: failed to unmarshal json", err)
-		} else {
-			switch data := jsonData.(type) {
-			case map[string]interface{}:
-				for k, v := range data {
-					params[k] = v
+		if len(body) > 0 {
+			var jsonData interface{}
+			if err := json.Unmarshal(body, &jsonData); err != nil {
+				if san, err := validate.ValidateBasicText(string(body)); err != nil {
+					log.Println("Service::parameters: failed to unmarshal json", err, san)
 				}
-			case []interface{}:
-				params["data"] = data
-			default:
-				log.Println("Service::parameters: unexpected JSON type", data)
+			} else {
+				switch data := jsonData.(type) {
+				case map[string]interface{}:
+					for k, v := range data {
+						params[k] = v
+					}
+				case []interface{}:
+					params["data"] = data
+				default:
+					if san, err := validate.ValidateBasicText(string(body)); err != nil {
+						log.Println("Service::parameters: failed to unmarshal json type", err, san)
+					}
+				}
 			}
 		}
 	}
