@@ -49,7 +49,9 @@ func (s *Service) static(w http.ResponseWriter, r *http.Request) (bool, error) {
 	if s.serviceName != "" {
 		prefix := "/service/" + s.serviceName
 		relativePath = strings.TrimPrefix(r.URL.Path, prefix)
-	}
+	} else {
+                relativePath = r.URL.Path
+        }
 
 	if relativePath == "" || relativePath == "/" {
 		relativePath = "/index.html"
