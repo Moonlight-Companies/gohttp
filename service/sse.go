@@ -165,7 +165,7 @@ func (s *SseServer) SetLoggingLevel(level logger.LogLevel) *SseServer {
 func (svc *Service) RegisterSSE(uri string, factory SseEventHandlerFactory) *SseServer {
 	srv := &SseServer{
 		fanout:  mpmc.NewProducer[SseMessage](mpmc.ProducerKind_All, 2048, 2048),
-		Logging: logger.NewLogger(logger.LogLevelDebug, "sse::"+uri),
+		Logging: logger.NewLogger("sse::" + uri),
 		factory: factory,
 		clients: make(map[ClientID]*SseSession),
 	}

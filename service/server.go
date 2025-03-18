@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"sort"
@@ -29,7 +30,7 @@ func NewServiceHttpRouteInfo(uri, method string, fn ServiceHandleFunc) *serviceH
 		Method: method,
 		Fn:     fn,
 		Hits:   0,
-		Logger: logger.NewLogger(logger.LogLevelDebug, uri),
+		Logger: logger.NewLogger(uri),
 	}
 
 	return info
@@ -140,6 +141,13 @@ func (s *Service) Start() error {
 
 func (s *Service) Close() {
 	close(s.done)
+
+	if s.server != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		s.server.Shutdown(ctx)
+	}
+
 }
 
 func (s *Service) RegisterRouteGET(uri string, fn ServiceHandleFunc) *serviceHttpRouteInfo {
@@ -248,7 +256,7 @@ func NewServiceBuilder() *ServiceBuilder {
 	return &ServiceBuilder{
 		port:        0,
 		serviceName: "",
-		logger:      logger.NewLogger(logger.LogLevelDebug, "service"),
+		logger:      logger.NewLogger("service"),
 	}
 }
 
