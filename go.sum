@@ -4,6 +4,8 @@ github.com/Moonlight-Companies/gologger v0.0.0-20250211210449-0e909fe17587 h1:Ng
 github.com/Moonlight-Companies/gologger v0.0.0-20250211210449-0e909fe17587/go.mod h1:jNRASSd/W26iSJCCxI78tXpszF9wJixD4vq2bX4e6E4=
 github.com/Moonlight-Companies/gologger v0.0.0-20250318194802-2a2ce06b47b2 h1:PvGGvarcHebLRwekO3ge9z1nCbIWLNzfHSXDUEc8E2U=
 github.com/Moonlight-Companies/gologger v0.0.0-20250318194802-2a2ce06b47b2/go.mod h1:jNRASSd/W26iSJCCxI78tXpszF9wJixD4vq2bX4e6E4=
+github.com/Moonlight-Companies/gologger v0.0.0-20250318201616-045bf82dcf53 h1:R0vS2q87OJIG62qOiqmbgGIE8hx1AVWujaJ2EJ/AsEc=
+github.com/Moonlight-Companies/gologger v0.0.0-20250318201616-045bf82dcf53/go.mod h1:jNRASSd/W26iSJCCxI78tXpszF9wJixD4vq2bX4e6E4=
 github.com/Moonlight-Companies/gompmc v0.0.0-20240717201611-c898057829b6 h1:uqrXWO4nO/sP7Um2nKkLUYrlE9jII+5Nwe+Xz6zUR7I=
 github.com/Moonlight-Companies/gompmc v0.0.0-20240717201611-c898057829b6/go.mod h1:zNoA3KVl11JkB0gu0nD8KpMekzNs7PEj6f+Nq05GIck=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
